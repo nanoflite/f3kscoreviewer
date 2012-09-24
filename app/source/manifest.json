@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "F3K Score Viewer",
+  "description": "Shows and analyses an F3K contest.",
+  "version": "1",
+  "app": {
+    "launch": {
+      "local_path": "index.html",
+      "container": "panel"  
+    }
+  }
+}
