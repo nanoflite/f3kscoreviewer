@@ -1,272 +1,321 @@
 #= require 'jquery'
-#= require 'mustache'
 #= require 'underscore'
+#= require 'backbone'
+#= require 'mustache'
 #= require 'bootstrap'
+#= require 'backbone-patch-recursive-json'
 
-class Competitor
-    constructor: (@index, @name, @lastName, @class, @country, @club, @faiNumber) ->
-        console.log "#{@index}, #{@name}, #{@lastName}"
-        @rounds = []        
+class window.PilotsView extends Backbone.View
 
-    getName: ->
-        "#{@name} #{@lastName}"
+    initialize: ->
+        @template = $('#pilot-list-template').text()
+        @el = '#pilots'
 
-    addRound: (round) ->
-        @rounds.push round
+    render: ->
+        $(@el).html Mustache.render @template, @collection.toJSON()
+        @    
 
-competitors = []
+class window.TasksView extends Backbone.View
 
-class Task
-    constructor: (@index, @name, @longName, @windowTime) ->
+    initialize: ->
+        @template = $('#task-list-template').text()
+        @el = '#tasks'
 
-    getName: ->
-        "#{@name} - #{@longName}"
+    render: ->
+        $(@el).html Mustache.render @template, @collection.toJSON()
+        @
 
-tasks = []
+class window.FlightMatrixView extends Backbone.View
 
-class RoundScore
-    constructor: (@round, @group, @task, @competitor, @flightTimes) ->
+    initialize: ->
+        @template = $('#flightmatrix-template').text()
+        @el = '#flightmatrix'
 
-roundScores = []
+    render: ->
+        model = { pilots: @collection.toJSON(), rounds: @collection.first().get('flightGroups').toJSON() }
+        $(@el).html Mustache.render @template, model
 
-class Round
-    constructor: (@roundNumber, @groupNumber, @task) ->
+class window.StartlistView extends Backbone.View
 
-class Contest
-    constructor: (@name) ->
-        @pilots = []
-        @tasks = []
-        @rounds = []
+    initialize: ->
+        @template = $('#start-template').text()
+        @el = '#start'
 
-    findContestRound: (roundNumber) ->
-        for round in @rounds
-            return round if round.roundNumber == roundNumber
-        return null
+    render: ->
+       $(@el).html Mustache.render @template, @collection.toJSON() 
 
-    addContestRound: (round) ->
-        @rounds.push round
+class window.DetailScoreView extends Backbone.View
 
-class ContestRound
-    constructor: (@roundNumber, @task) ->
-        @groups = []
-        @scores = []
+    initialize: ->
+        @template = $('#detail-template').text()
+        @el = '#detail'
 
-    findContestGroup: (groupNumber) ->
-        for group in @groups
-            return group if group.groupNumber == groupNumber
-        return null
+    render: ->
+        $(@el).html Mustache.render @template, @collection.toJSON()
 
-    addContestGroup: (group) ->
-        @groups.push group
+class window.ScoreView extends Backbone.View
 
-    addRoundScore: (score) ->
-        @scores.push score
+    initialize: ->
+        @template = $('#score-template').text()
+        @el = '#score'
 
-    getPilotTotalFlightTime: (pilot) ->
-        for score in @scores
-            if score.competitor == pilot
-                sum = 0
-                sum += time for time in score.flightTimes
-                return sum
+    render: ->
+        rounds = ( @collection.at 0 ).get( 'totalScores' ).length
+        $(@el).html Mustache.render @template, { pilots: @collection.toJSON(), rounds: [1..rounds] }
 
-    getPilotFlightTimes: (pilot) ->
-        for score in @scores
-            if score.competitor == pilot
-                return score.flightTimes
-        []
+class window.Contest extends Backbone.Model
 
-    getPilotScores: (groupNumber) ->
-        scores = {}
-        group = @findContestGroup groupNumber
-        sortedPilots = _.sortBy group.pilots, (pilot) => @getPilotTotalFlightTime(pilot)
-        sortedPilots = sortedPilots.reverse() 
-        max = @getPilotTotalFlightTime sortedPilots[0]
-        for pilot in sortedPilots
-            points = Math.floor( @getPilotTotalFlightTime(pilot) / max * 1000 )
-            scores[pilot.getName()] = points
-        scores
+    showPilots: ->
+        pilotsView = new PilotsView
+            collection: @get 'pilots'
+        pilotsView.render()
 
-    getMaxFlights: ->
-        maxFlights = 0
-        for group in @groups
-            for pilot in group.pilots
-                flights = @getPilotFlightTimes(pilot)
-                maxFlights = flights.length if flights.length > maxFlights 
-        maxFlights
+    showTasks: ->
+        tasksView = new TasksView
+            collection: @get 'tasks'
+        tasksView.render()
 
-class ContestGroup
-    constructor: (@groupNumber) ->
-        @pilots = []
-
-    addPilot: (pilot) ->
-        @pilots.push pilot
-
-contest = null
-
-showCompetitors = ->
-    template = $("#competitor-list-template").text()
-    $("#competitors").html Mustache.render template, { competitors: competitors }
-
-showTasks = ->
-    template = $("#task-list-template").text()
-    $("#tasks").html Mustache.render template, { tasks: tasks }
-
-showFlightMatrix = ->
-    matrix = []
-    for competitor in competitors
-        rounds = competitor.rounds
-        groups = [] 
-        for round in rounds
-            groups.push { group: round.groupNumber }
-        matrix.push { name: competitor.getName(), groups: groups }
-    rounds = competitors[0].rounds 
-
-    template = $("#flightmatrix-template").text()
-    $("#flightmatrix").html Mustache.render template, { rounds: rounds, matrix: matrix }
-
-scores = {} 
-
-showDetail = ->
-    _rounds = []
-    for round in contest.rounds
-        _round =
-            roundNumber: round.roundNumber 
-            roundName: round.task.getName()
-        _groups = []
-        for group in _.sortBy( round.groups, (group) -> group.groupNumber )
-            _group = 
-                groupNumber: group.groupNumber
-            _pilots = []
-            pilotScores = round.getPilotScores group.groupNumber
-            for pilot in group.pilots
-                flights = round.getPilotFlightTimes(pilot)
-                _pilot =
-                    name: pilot.getName()
-                    flights: ( { time: flights[i] } for i in [0..round.getMaxFlights()-1] )
-                    total: round.getPilotTotalFlightTime(pilot)
-                    score: pilotScores[pilot.getName()]
-                    penalty: 0
-                _pilots.push _pilot
-
-                if not scores[pilot.getName()]
-                    scores[pilot.getName()] = { rounds: [] }
-                scores[pilot.getName()]['rounds'].push { round: round.roundNumber, score: _pilot['score'], scrapped: false }
-
-            _group['pilots'] = _.sortBy( _pilots, (pilot) -> -1 * pilot.score )
-            _group['flights'] = ( { time: i } for i in [1..round.getMaxFlights()] )
-            _groups.push _group
-            _round['groups'] = _groups
-        _rounds.push _round
-
-    console.log _rounds
-
-    template = $("#detail-template").text()
-    $("#detail").html Mustache.render template, { rounds: _rounds }
-
-    template = $("#start-template").text()
-    $("#start").html Mustache.render template, { rounds: _rounds }
-
-showScore = ->
-    nr_rounds = contest.rounds.length
-
-    scrappers = 0
-    if nr_rounds >= 5
-        scrappers = 1
-    if nr_rounds >= 9
-        scrappers = 2
-    if nr_rounds >= 14    
-        scrappers = 1 + (nr_rounds - 4) / 2
-
-    for pilot of scores
-        total = 0
-        rounds = _.sortBy( scores[pilot]['rounds'], (round) -> round.score )
-        if scrappers > 0    
-            for i in [0..scrappers-1]
-                rounds[i]['scrapped'] = true
-        for round in rounds 
-            total += round['score'] if not round['scrapped']
-        scores[pilot]['total'] = total   
-
-    console.log scores
-
-    _rounds = ( { roundNumber: round.roundNumber } for round in contest.rounds  )
-    _pilots = ( { rounds: scores[pilot]['rounds'], name: pilot, score: scores[pilot]['total'] } for pilot of scores )
-    _pilots = _.sortBy( _pilots, (pilot) -> -1 * pilot.score )
-
-    rank = 1
-    for _pilot in _pilots
-        _pilot['rank'] = rank++
-
-    hundred = _pilots[0].score
-    pilot['percent'] = Math.round( pilot['score'] / hundred * 10000 ) / 100 for pilot in _pilots       
- 
-    template = $("#score-template").text()
-    $("#score").html Mustache.render template, { rounds: _rounds, pilots: _pilots }
-
-parse = (xml) ->
-    $x = $ $.parseXML xml
-
-    contest = new Contest $x.find('competitionName').first().text()
-
-    $x.find("competitorList f3kscore\\.Competitor").first().find("task").each (index, element) ->
-        values = ( $(element).find(field).text() for field in [ "name", "longName", "windowTime" ] )
-        tasks.push new Task index, values...
-
-    id = 0
-    $x.find("competitorList f3kscore\\.Competitor").each (index, element) ->
-        values = ( $(element).find(field).first().text() for field in [ "firstName", "lastName", "competitorClass", "country", "club", "faiAmaNum" ] )
-        console.log values
-        if values[0] != ""
-            competitor = new Competitor id++, values... 
-            competitors.push competitor
-            $(element).find('scores').first().find("f3kscore\\.RoundScore").each (roundScoreIndex, roundScoreElement) ->
-                roundNumber = 1 + parseInt $(roundScoreElement).find("roundNumber").text()
-                groupNumber = parseInt $(roundScoreElement).find("groupNumber").text()
-                times = []
-                $(roundScoreElement).find("flightTimes int").each (timeIndex, timeElement) ->
-                    time = parseInt $(timeElement).text()
-                    times.push time if time not in [ -1, 0 ]
-                roundScores.push new RoundScore roundNumber, groupNumber, tasks[roundScoreIndex], competitor, times
-
-    for score in roundScores
-        round = new Round score.round, score.group, score.task
-        score.competitor.addRound round
-
-    contest.pilots = competitors
-    contest.tasks = tasks
-
-    for score in roundScores
-        if not contest.findContestRound score.round
-            round = new ContestRound score.round, score.task
-            for roundScore in roundScores
-                if roundScore.round == score.round
-                    round.addRoundScore roundScore
-            contest.addContestRound round
-        round = contest.findContestRound score.round
-        if not round.findContestGroup score.group
-            group = new ContestGroup score.group
-            round.addContestGroup group
-        group = round.findContestGroup score.group
-        group.addPilot score.competitor
+    showFlightGroupMatrix: ->
+        flightmatrixView = new FlightMatrixView
+            collection: @get 'pilots'
+        flightmatrixView.render()
     
-showCompetition = ->
-    template = $('#name-template').text()
-    $("#name").html Mustache.render template, { name: contest.name }
+    showStartlist: ->
+        startlistView = new StartlistView
+            collection: @get 'rounds'
+        startlistView.render()
+
+    showDetailScore: ->
+        detailScoreView = new DetailScoreView
+            collection: @get 'rounds'
+        detailScoreView.render()
+
+    showScore: ->
+        scoreView = new ScoreView
+            collection: @get 'scorePilots'
+        scoreView.render()    
+
+    calculateScores: ->
+        @get( 'rounds' ).each (round) =>
+            round.get( 'groups' ).each (group) =>
+                group.calculateScores()
+    
+        nrRounds = @get( 'rounds' ).length
+        nrScrappers = @_calcutateNrScrappers nrRounds
+        
+        @set 'scorePilots', new PilotCollection
+        @get( 'rounds' ).each (round) =>
+            roundId = round.get 'id'
+            round.get( 'groups' ).each (group) =>
+                group.get( 'scorePilots' ).each (pilot) =>
+                    scorePilot = @get( 'scorePilots' ).get pilot.get 'id'
+                    if not scorePilot
+                        scorePilot = pilot.clone()
+                        @get( 'scorePilots' ).add scorePilot
+                    scores = scorePilot.get 'totalScores'
+                    if not scores
+                        scorePilot.set 'totalScores', new ScoreCollection
+                    totalScore = scorePilot.get 'totalScore'
+                    if not totalScore
+                        scorePilot.set 'totalScore', 0
+                    scorePilot.get( 'totalScores' ).add new Score
+                        score:  ( parseFloat( pilot.get( 'score' ).get 'score' ) ).toFixed(0)
+                        penalty: pilot.get( 'score' ).get 'penalty'
+                        roundId: roundId
+                    scorePilot.set 'totalScore', scorePilot.get( 'totalScore' ) + parseFloat( pilot.get( 'score' ).get( 'score' ) )
+    
+        maxPilot = @get( 'scorePilots' ).max (pilot) -> pilot.get 'totalScore'
+        maxScore = maxPilot.get 'totalScore'
+        @get( 'scorePilots' ).each (pilot) =>
+            pilot.set 'totalPercent', ( 100.0 * pilot.get( 'totalScore' ) / maxScore ).toFixed(2)
+            pilot.set 'totalScore', ( parseFloat( pilot.get( 'totalScore' ) ) ).toFixed(0)
+        @get( 'scorePilots' ).comparator = (pilot) ->
+            -1 * parseFloat( pilot.get 'totalScore' )
+        @get( 'scorePilots' ).sort()
+        rank = 1
+        @get( 'scorePilots' ).each (pilot) =>
+            pilot.set 'rank', rank++ 
+
+    _calcutateNrScrappers: (rounds) ->
+        scrappers = 0
+        if rounds >= 5
+            scrappers = 1
+        if rounds >= 9
+            scrappers = 2
+        if rounds >= 14    
+            scrappers = 1 + (nr_rounds - 4) / 2
+        scrappers
+
+    _getFlightGroupMatrix: ->
+        @get( 'pilots' ).each (pilot) =>
+            pilotId = pilot.get 'id'
+            flightGroups = new FlightGroupCollection
+            pilot.set 'flightGroups', flightGroups
+            @get( 'rounds').each (round) =>
+                roundId = round.get 'id'
+                round.get( 'groups' ).each (group) =>
+                    groupId = group.get 'id'
+                    if group.get( 'pilots' ).get( pilotId ) != undefined
+                        flightGroup = new FlightGroup
+                            round: roundId
+                            group: groupId
+                        flightGroups.add flightGroup
+
+    parse: (xml) ->
+        $x = $ $.parseXML xml
+        @_parseTasks $x
+        @_parsePilots $x
+        @_getFlightGroupMatrix()
+
+    _value: (element, field) ->
+        $(element).find(field).first().text() 
+
+    _parsePilots: ($x) ->
+        rounds = new RoundCollection
+        pilots = new PilotCollection
+        id = 0
+        $x.find("competitorList f3kscore\\.Competitor").each (index, element) =>
+            firstName = @_value element, 'firstName'
+            if firstName != ""
+                pilot = new Pilot
+                    id: id++
+                    firstName: firstName
+                    lastName: @_value element, 'lastName'
+                    competitorClass: @_value element, 'competitorClass'
+                    country: @_value element, 'country'
+                    club: @_value element, 'club'
+                    faiAmaNum: @_value element, 'faiAmaNum'
+                pilots.add pilot
+                $(element).find('scores').first().find("f3kscore\\.RoundScore").each (roundScoreIndex, roundScoreElement) =>
+                    roundNumber = 1 + parseInt $(roundScoreElement).find("roundNumber").text()
+                    groupNumber = parseInt $(roundScoreElement).find("groupNumber").text()
+                    round = rounds.get roundNumber
+                    if not round
+                        round = new Round
+                            id: roundNumber
+                            task: @get( 'tasks' ).get roundScoreIndex
+                            groups: new GroupCollection
+                        rounds.add round
+                    group = round.get('groups').get groupNumber
+                    if not group
+                        group = new Group
+                            id: groupNumber
+                            pilots: new PilotCollection
+                            times: new TimeCollection
+                            scores: new ScoreCollection
+                        round.get('groups').add group
+                    group.get('pilots').add pilot
+                    times = []
+                    $(roundScoreElement).find("flightTimes int").each (timeIndex, timeElement) ->
+                        time = parseInt $(timeElement).text()
+                        time = 0 if time < 0
+                        times.push time
+                    time = new Time
+                        times: times
+                    group.get('times').add time
+        @set 'rounds', rounds
+        @set 'pilots', pilots
+
+    _parseTasks: ($x) ->
+        tasks = new TaskCollection
+        id = 0
+        $x.find("competitorList f3kscore\\.Competitor").first().find("task").each (index, element) =>
+            parts = ( @_value element, 'name' ).split /-/
+            task = new Task
+                id: id++
+                letter: parts[0].replace /"/g, ''
+                name: parts[1]
+                description: @_value element, 'longName'
+                windowTime: @_value element, 'windowTime'
+            tasks.add task
+        @set 'tasks', tasks
+
+class window.Pilot extends Backbone.Model
+
+class window.PilotCollection extends Backbone.Collection
+
+    model: Pilot
+
+#    comparator: (model) ->
+#        "#{model.get 'lastName'} #{model.get 'firstName'}"
+
+class window.Task extends Backbone.Model
+
+class window.TaskCollection extends Backbone.Collection
+
+    model: Task
+
+class window.Round extends Backbone.Model
+    
+class window.RoundCollection extends Backbone.Collection
+
+    model: Round
+
+    comparator: (model) ->
+        model.get 'id'
+
+class window.Group extends Backbone.Model
+
+    calculateScores: ->
+        @get( 'times' ).each (time) =>
+            totalTime = _.reduce time.get('times'), ( (a, n) -> a + n ), 0
+            time.set 'totalTime', totalTime
+        maxTime = @get( 'times' ).max (time) -> time.get 'totalTime'
+        max = maxTime.get 'totalTime'
+        @get( 'times' ).each (time) =>
+            @get( 'scores' ).add new Score
+                score: (1000.0 * time.get( 'totalTime' ) / max).toFixed(2)
+                penalty: 0
+        times = @get( 'times' ).at 0
+        @set 'timesWidth', [1..times.get('times').length]
+        @set 'scorePilots', new PilotCollection    
+        for i in [0..@get( 'pilots' ).length-1]
+            pilot = @get( 'pilots' ).at( i ).clone()
+            @get( 'scorePilots' ).add pilot
+            pilot.set 'times', @get( 'times' ).at i
+            pilot.set 'score', @get( 'scores' ).at i
+ 
+class window.GroupCollection extends Backbone.Collection
+    
+    model: Group
+
+    comparator: (model) ->
+        model.get 'id'
+
+class window.Time extends Backbone.Model
+
+class window.TimeCollection extends Backbone.Collection
+
+    model: Time
+
+class window.FlightGroup extends Backbone.Model
+
+class window.FlightGroupCollection extends Backbone.Collection
+
+    model: FlightGroup
+
+class window.Score extends Backbone.Model
+
+class window.ScoreCollection extends Backbone.Collection
 
 handleFileSelect = (event) ->
     file = event.target.files[0]
-    $("#pilots").append "#{file.name}, #{file.type}, #{file.size}, #{file.lastModifiedDate}"
 
     reader = new FileReader
     reader.onload = (event) =>
-        parse event.target.result
-        showCompetition()
-        showCompetitors()
-        showTasks()
-        showFlightMatrix()
-        showDetail()
-        showScore()    
-    
+        contest = new Contest
+        contest.parse event.target.result
+        contest.calculateScores()
+
+        console.log contest.toJSON()
+
+        contest.showPilots() 
+        contest.showTasks()
+        contest.showFlightGroupMatrix()
+        contest.showStartlist()
+        contest.showDetailScore()
+        contest.showScore()
+        
     reader.readAsText file
 
 $(document).ready ->
