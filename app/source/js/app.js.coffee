@@ -219,7 +219,7 @@ class window.Contest extends Backbone.Model
     _parseTasks: ($x) ->
         tasks = new TaskCollection
         id = 0
-        $x.find("competitorList f3kscore\\.Competitor").first().find("task").each (index, element) =>
+        $x.find("competitorList f3kscore\\.Competitor").first().find("lastCalculatedTask").each (index, element) =>
             parts = ( @_value element, 'name' ).split /-/
             task = new Task
                 id: id++
@@ -303,12 +303,10 @@ handleFileSelect = (event) ->
 
     reader = new FileReader
     reader.onload = (event) =>
+
         contest = new Contest
         contest.parse event.target.result
         contest.calculateScores()
-
-        console.log contest.toJSON()
-
         contest.showPilots() 
         contest.showTasks()
         contest.showFlightGroupMatrix()
