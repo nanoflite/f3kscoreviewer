@@ -89,7 +89,6 @@
         {{/timesWidth}}
         <th>Total</th>
         <th>Score</th>
-        <th>Penalty</th>
     </tr>
     {{#scorePilots}}
         <tr>
@@ -99,7 +98,6 @@
             {{/times.times}}
             <td class="number">{{times.totalTime}}</td>
             <td class="number">{{score.score}}</td>
-            <td class="number">{{score.penalty}}</td>    
         </tr>
     {{/scorePilots}}
     {{/groups}}
@@ -119,7 +117,6 @@
                     {{#rounds}}
                     <th>{{.}}</th>
                     {{/rounds}}
-                    <th>Penalty/Round</th>
                     <th>Score</th>
                     <th>%</th> 
                 </tr>
@@ -130,9 +127,8 @@
                     <td class="number">{{rank}}</td>
                     <td>{{firstName}} {{lastName}}</td> 
                     {{#totalScores}}
-                    <td class="number"><span class="scrap_{{scrapped}}">{{score}}</span></td>
+                    <td class="number"><span class="scrap_{{scrapper}}">{{score}}</span></td>
                     {{/totalScores}}
-                    <td class="number">{{penalty}}</td>
                     <td class="number">{{totalScore}}</td>
                     <td class="number">{{totalPercent}}</td> 
                 </tr>
