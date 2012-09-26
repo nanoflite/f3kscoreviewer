@@ -122,7 +122,16 @@ class window.Contest extends Backbone.Model
                         score:  ( parseFloat( pilot.get( 'score' ).get 'score' ) ).toFixed(0)
                         penalty: pilot.get( 'score' ).get 'penalty'
                         roundId: roundId
-                    scorePilot.set 'totalScore', scorePilot.get( 'totalScore' ) + parseFloat( pilot.get( 'score' ).get( 'score' ) )
+                        scrapper: false
+        @get( 'scorePilots' ).each (pilot) ->
+            sortedScores = pilot.get( 'totalScores' ).sortBy (score) -> parseFloat( score.get 'score' )
+            if nrScrappers > 0
+                for index in [0..nrScrappers-1]
+                    sortedScores[ index ].set 'scrapper', true
+            total = 0
+            for index in [nrScrappers..sortedScores.length-1]
+                total += parseFloat( sortedScores[ index ].get( 'score' ) )    
+            pilot.set 'totalScore', total
     
         maxPilot = @get( 'scorePilots' ).max (pilot) -> pilot.get 'totalScore'
         maxScore = maxPilot.get 'totalScore'
@@ -165,6 +174,7 @@ class window.Contest extends Backbone.Model
         $x = $ $.parseXML xml
         @_parseTasks $x
         @_parsePilots $x
+        @_filterRoundsWithAllZeroScores()
         @_getFlightGroupMatrix()
 
     _value: (element, field) ->
@@ -216,6 +226,16 @@ class window.Contest extends Backbone.Model
         @set 'rounds', rounds
         @set 'pilots', pilots
 
+    _filterRoundsWithAllZeroScores: ->
+        roundsToDelete = []
+        @get( 'rounds' ).each (round) ->
+            time = 0
+            round.get( 'groups' ).each (group) ->
+                group.get( 'times' ).each (times) ->
+                    time += _.reduce times.get( 'times' ), ( (a, n) -> a + n ), 0
+            roundsToDelete.push round if time == 0
+        @get( 'rounds' ).remove round for round in roundsToDelete
+    
     _parseTasks: ($x) ->
         tasks = new TaskCollection
         id = 0
@@ -263,8 +283,10 @@ class window.Group extends Backbone.Model
         maxTime = @get( 'times' ).max (time) -> time.get 'totalTime'
         max = maxTime.get 'totalTime'
         @get( 'times' ).each (time) =>
+            score = (1000.0 * time.get( 'totalTime' ) / max).toFixed(2)
+            score = 0 if isNaN score 
             @get( 'scores' ).add new Score
-                score: (1000.0 * time.get( 'totalTime' ) / max).toFixed(2)
+                score: score
                 penalty: 0
         times = @get( 'times' ).at 0
         @set 'timesWidth', [1..times.get('times').length]
@@ -303,10 +325,14 @@ handleFileSelect = (event) ->
 
     reader = new FileReader
     reader.onload = (event) =>
-
         contest = new Contest
+        
         contest.parse event.target.result
+
+        console.log contest
+
         contest.calculateScores()
+        
         contest.showPilots() 
         contest.showTasks()
         contest.showFlightGroupMatrix()
