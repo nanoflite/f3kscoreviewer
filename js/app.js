@@ -14324,7 +14324,7 @@ Backbone.Model.prototype.toJSON = function() {
 }
 ;
 (function() {
-  var handleFileSelect,
+  var handleFileSelect, handleUrlSelect, showContestFromText, showContestFromXml,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -14639,9 +14639,7 @@ Backbone.Model.prototype.toJSON = function() {
       });
     };
 
-    Contest.prototype.parse = function(xml) {
-      var $x;
-      $x = $($.parseXML(xml));
+    Contest.prototype.parse = function($x) {
       this._parseTasks($x);
       this._parsePilots($x);
       this._filterRoundsWithAllZeroScores();
@@ -15001,19 +14999,40 @@ Backbone.Model.prototype.toJSON = function() {
     file = event.target.files[0];
     reader = new FileReader;
     reader.onload = function(event) {
-      var contest;
-      contest = new Contest;
-      contest.parse(event.target.result);
-      console.log(contest);
-      contest.calculateScores();
-      contest.showPilots();
-      contest.showTasks();
-      contest.showFlightGroupMatrix();
-      contest.showStartlist();
-      contest.showDetailScore();
-      return contest.showScore();
+      return showContestFromText(event.target.result);
     };
     return reader.readAsText(file);
+  };
+
+  handleUrlSelect = function(url) {
+    if (!url) {
+      return;
+    }
+    return $.get(url, function(xml) {
+      return showContestFromXml(jQuery(xml));
+    });
+  };
+
+  showContestFromText = function(text) {
+    var $x;
+    $x = $($.parseXML(text));
+    return showContestFromXml($x);
+  };
+
+  showContestFromXml = function(xml) {
+    var contest;
+    $('#menu').hide();
+    $('#contest').fadeIn();
+    contest = new Contest;
+    contest.parse(xml);
+    contest.calculateScores();
+    console.log(contest);
+    contest.showPilots();
+    contest.showTasks();
+    contest.showFlightGroupMatrix();
+    contest.showStartlist();
+    contest.showDetailScore();
+    return contest.showScore();
   };
 
   $(document).ready(function() {
@@ -15031,11 +15050,12 @@ Backbone.Model.prototype.toJSON = function() {
       return $('#f3kscoreurlselect').fadeOut();
     });
     $('#contest').hide();
-    return $('#_f3kscorefile').on('change', function(event) {
+    $('#_f3kscorefile').on('change', function(event) {
       $('#f3kscorefile').val($(event.currentTarget).val().replace('C:\\fakepath\\', ''));
-      $('#menu').hide();
-      $('#contest').fadeIn();
       return handleFileSelect(event);
+    });
+    return $('#btnExamine').click(function(event) {
+      return handleUrlSelect($('#f3kscoreurl').data('value'));
     });
   });
 
