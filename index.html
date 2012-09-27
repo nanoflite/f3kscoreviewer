@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>F3KScore Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Shows F3K scores online.">
+    <meta name="author" content="Johan Van den Brande <johan@vandenbrande.com>">
+    <link rel="stylesheet" type="text/css" href="css/site.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="css/print.css" media="print" />
+    <script type="text/javascript" src="js/app.js"></script>
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">F3K Score Viewer</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <script id="pilot-list-template" type="text/html">
+    <div class="well">
+    <h1>Pilot list</h1>
+    <table id="pilot-list" class="table table-striped table-bordered table-condensed">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Last Name</th>
+                <th>Country</th>
+                <th>FAI Number</th>
+                <th>Club</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#.}}
+            <tr>
+                <td>{{firstName}}</td>
+                <td>{{lastName}}</td>
+                <td>{{country}}</td>
+                <td>{{faiNumber}}</td>
+                <td>{{club}}</td>
+            </tr>
+            {{/.}}
+        </tbody>
+    </table>
+    </div>
+</script>
+
+<script id="task-list-template" type="text/html">
+    <div class="well">
+    <h1>Task list</h1>
+    <table id="task-list" class="table table-striped table-bordered table-condensed">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            <tbody>
+                {{#.}}
+                <tr>
+                    <td>{{letter}}</td>
+                    <td>{{name}}</td>
+                    <td>{{description}}</td>
+                </tr>
+                {{/.}}
+            </tbody>
+    </table>
+    </div>
+</script>
+
+<script id="flightmatrix-template" type="text/html">
+    <div class="well">
+    <h1>Flight matrix</h1>
+    <table id="flightmatrix-list" class="table table-striped table-bordered table-condensed">
+        <thead>
+            <tr>
+                <th>Name</th>
+                {{#rounds}}
+                <th>{{round}}</th>
+                {{/rounds}}
+            </tr>
+        </thead>
+        <tbody>
+            {{#pilots}}
+            <tr>
+                <td>{{firstName}} {{lastName}}</td>
+                {{#flightGroups}}
+                <td class="number">{{group}}</td>
+                {{/flightGroups}}
+            </tr>
+            {{/pilots}}
+        </tbody>
+    </table>
+    </div>
+</script>
+
+<script id="detail-template" type="text/html">
+    <div class="well">
+    <h1>Detailed score</h1>
+    {{#.}}    
+    <h2>Round {{id}} - {{task.name}}</h1>
+    <table id="detail-list-round-{{id}}" class="table table-striped table-bordered table-condensed">
+    {{#groups}}
+    <tr>
+        <th>Group {{id}}</th>
+        {{#timesWidth}}
+        <th>t: {{.}}</th>
+        {{/timesWidth}}
+        <th>Total</th>
+        <th>Score</th>
+    </tr>
+    {{#scorePilots}}
+        <tr>
+            <td>{{firstName}} {{lastName}}</td>
+            {{#times.times}}
+            <td class="number">{{.}}</td>
+            {{/times.times}}
+            <td class="number">{{times.totalTime}}</td>
+            <td class="number">{{score.score}}</td>
+        </tr>
+    {{/scorePilots}}
+    {{/groups}}
+    </table>
+    {{/.}}
+    </div>
+</script>
+
+<script id="score-template" type="text/html">
+    <div class="well">
+        <h1>Score</h1>
+        <table id="score-list" class="table table-striped table-bordered table-condensed">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    {{#rounds}}
+                    <th>{{.}}</th>
+                    {{/rounds}}
+                    <th>Score</th>
+                    <th>%</th> 
+                </tr>
+            </thead>
+            <tbody>
+                {{#pilots}}
+                <tr>
+                    <td class="number">{{rank}}</td>
+                    <td>{{firstName}} {{lastName}}</td> 
+                    {{#totalScores}}
+                    <td class="number"><span class="scrap_{{scrapper}}">{{score}}</span></td>
+                    {{/totalScores}}
+                    <td class="number">{{totalScore}}</td>
+                    <td class="number">{{totalPercent}}</td> 
+                </tr>
+                {{/pilots}}
+            </tbody>    
+        </table>    
+    </div>
+</script>
+
+<script id="start-template" type="text/html">
+    <div class="well">
+        <h1>Start list</h1>
+        {{#.}}
+        <h2>Round {{id}} - {{task.name}}</h2>
+            <ul class="thumbnails">
+            {{#groups}}
+            <li class="span3">
+            <table id="start-list" class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr><th>Group {{id}}</th></tr> 
+                </thead>
+                <tbody>
+                    {{#pilots}}
+                        <tr><td>{{firstName}} {{lastName}}</td></tr>
+                    {{/pilots}}
+                </tbody>
+            </table> 
+            </li>   
+            {{/groups}}
+            </ul>    
+        {{/.}}             
+    </div>
+</script>
+
+<script id="name-template" type="text/html">
+<div class="row">
+    <div class="span10">
+        <h1>{{name}}</h1>
+    </div>
+    <div class="span2">
+        <div class="btn-group">
+            <button class="btn"><i class="icon-home"></i></button>
+            <button class="btn"><i class="icon-print"></i></button>
+        </div>
+    </div>
+</div>
+<p/>
+</script>
+
+<div class="hero-unit">    
+    <h1>F3K Score Viewer</h1>
+    <p>Import an F3KScore xml file, and examine the contest.</p>
+</div>
+
+<div id="menu">
+<ul class="thumbnails">
+  <li class="span6">
+    <div class="thumbnail">
+        <div class="caption">
+            <input id="_f3kscorefile" type="file" style="display:none">
+            <div class="input-prepend input-append">
+                <span class="add-on">Load a file from disk</span><input id="f3kscorefile" class="span2" type="text" placeholder="Browse to a f3k.xml file" /><button class="btn btn-primary" type="button" onclick="$('input[id=_f3kscorefile]').click();"><i class="icon-file icon-white"></i> Browse</button>
+            </div>
+        </div>
+    </div>
+  </li>
+  <li class="span6">
+    <div class="thumbnail">
+        <div class="caption">
+            <div class="input-prepend input-append dropdown">
+                <span id="f3kscoreurltitle" class="add-on">Examine a Belgian contest</span><input type="text" id="f3kscoreurl" class="span2" placeholder="Click and choose contest" /><button class="btn btn-primary" type="button"><i class="icon-eye-open icon-white"></i> Examine</button>
+            </div>
+            <ul class="dropdown-menu" id="f3kscoreurlselect">
+                <li><a href="#" data-value="x">AAAAAA</a></li>
+                <li><a href="#" data-value="y">BBBBBB</a></li>
+            </ul>
+        </div>
+    </div>
+  </li>
+</ul>
+</div>
+
+<div id="contest">
+
+<div id="name"></div>
+
+<ul class="nav nav-tabs" id="report" data-tabs="tabs">
+  <li class="active"><a href="#score" data-toggle="tab">Score</a></li>
+  <li><a href="#pilots" data-toggle="tab">Pilots</a></li>
+  <li><a href="#tasks" data-toggle="tab">Tasks</a></li>
+  <li><a href="#flightmatrix" data-toggle="tab">Flight matrix</a></li>
+  <li><a href="#detail" data-toggle="tab">Detailed score</a></li>
+  <li><a href="#start" data-toggle="tab">Start list</a></li>
+</ul>
+
+<div class="tab-content">
+    <output class="tab-pane active" id="score"></output>
+    <output class="tab-pane" id="pilots"></output>
+    <output class="tab-pane" id="tasks"></output>
+    <output class="tab-pane" id="flightmatrix"></output>
+    <output class="tab-pane" id="detail"></output>
+    <output class="tab-pane" id="start"></output>
+</div>
+</div>
+
+    </div>
+
+  </body>
+</html>

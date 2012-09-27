@@ -1,0 +1,20 @@
+@import url(bootstrap.css);
+@import url(bootstrap-responsive.css);
+/* line 5, site.css.scss */
+.scrap_true {
+  text-decoration: line-through; }
+
+/* line 9, site.css.scss */
+.number {
+  text-align: right; }
+
+/* line 13, site.css.scss */
+.hero-unit {
+  padding: 60px;
+  margin-bottom: 30px;
+  background-image: url(../img/helios.jpg);
+  background-repeat: no-repeat;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  background-position: 0px -220px; }

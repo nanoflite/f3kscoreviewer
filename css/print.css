@@ -1,0 +1,61 @@
+.navbar {
+    display: none;
+}
+
+.nav {
+    display: none;
+}
+
+.hero-unit {
+    display: none;
+}
+
+@page {
+    margin: 1.5cm;
+}
+
+body {
+    font-size: 10pt;
+    font: "Times New Roman", serif;
+}
+
+h1 {
+    page-break-before: always;
+    font-size: 20pt;
+}
+
+h2 { 
+    font-size: 14pt; 
+    margin-top: 25px; 
+}
+
+table {
+    width: 80%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+thead {
+    display:table-header-group;
+}
+
+th {
+    border: 1px; solid black;
+    border-bottom: 2px solid black;
+}
+
+td {
+    border: 1px solid black;
+}
+
+ul {
+    list-style: none;
+}
+
+.scrap_true {
+    text-decoration: line-through;
+}
+
+.number {
+    text-align: right;
+}
