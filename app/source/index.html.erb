@@ -178,24 +178,9 @@
 <p/>
 </script>
 
-<script id="name-template" type="text/html">
-<div class="row">
-    <div class="span10">
-        <h1>{{name}}</h1>
-    </div>
-    <div class="span2">
-        <div class="btn-group">
-            <button class="btn"><i class="icon-home"></i></button>
-            <button class="btn"><i class="icon-print"></i></button>
-        </div>
-    </div>
-</div>
-<p/>
-</script>
-
 <div class="hero-unit">    
     <h1>F3K Score Viewer</h1>
-    <p>Import an F3KScore xml file, and examine the contest.</p>
+    <p>Import an F3KScore xml file, next examine the contest.</p>
 </div>
 
 <div id="menu">
@@ -214,11 +199,15 @@
     <div class="thumbnail">
         <div class="caption">
             <div class="input-prepend input-append dropdown">
-                <span id="f3kscoreurltitle" class="add-on">Examine a Belgian contest</span><input type="text" id="f3kscoreurl" class="span2" placeholder="Click and choose contest" /><button class="btn btn-primary" type="button"><i class="icon-eye-open icon-white"></i> Examine</button>
+                <span id="f3kscoreurltitle" class="add-on">Examine a Belgian contest</span><input type="text" id="f3kscoreurl" class="span2" placeholder="Click and choose contest" /><button class="btn btn-primary" type="button" id="btnExamine"><i class="icon-eye-open icon-white"></i> Examine</button>
             </div>
             <ul class="dropdown-menu" id="f3kscoreurlselect">
-                <li><a href="#" data-value="x">AAAAAA</a></li>
-                <li><a href="#" data-value="y">BBBBBB</a></li>
+                <li><a href="#" data-value="data/BK_2012_09_09_MASH.f3k.xml">2012 MASH</a></li>
+                <li><a href="#" data-value="data/F3K_23_09_2012_AMCE.f3k.xml">2012 ACME</a></li>
+                <li><a href="#" data-value="data/F3K_ANDENNE_2012.f3k.xml">2012 ANDENNE</a></li> 
+                <li><a href="#" data-value="data/F3K_ANTHISNES_2012.f3k.xml">2012 ANTHISNES</a></li>
+                <li><a href="#" data-value="data/F3K_DIEST_2012.f3k.xml">2012 DMC</a></li>
+                <li><a href="#" data-value="data/MACH-2012.f3k.xml">2012 MACH</a></li>
             </ul>
         </div>
     </div>

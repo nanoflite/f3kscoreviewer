@@ -67,7 +67,7 @@ class window.ContestView extends Backbone.View
 
     initialize: ->
         @template = $('#name-template').text()
-        @el = '#score'
+        @el = '#name'
 
     render: ->    
         $(@el).html Mustache.render @template, @model.toJSON()
@@ -184,8 +184,8 @@ class window.Contest extends Backbone.Model
                             group: groupId
                         flightGroups.add flightGroup
 
-    parse: (xml) ->
-        $x = $ $.parseXML xml
+    parse: ($x) ->
+        @_parseContest $x
         @_parseTasks $x
         @_parsePilots $x
         @_filterRoundsWithAllZeroScores()
@@ -193,6 +193,9 @@ class window.Contest extends Backbone.Model
 
     _value: (element, field) ->
         $(element).find(field).first().text() 
+
+    _parseContest: ($x) ->
+        @set 'name', $x.find('competitionName').first().text()
 
     _parsePilots: ($x) ->
         rounds = new RoundCollection
@@ -339,14 +342,24 @@ handleFileSelect = (event) ->
 
     reader = new FileReader
     reader.onload = (event) =>
+        showContestFromText event.target.result
+    reader.readAsText file
+
+handleUrlSelect = (url) ->
+    return if not url
+    $.get url, (xml) ->
+        showContestFromXml jQuery(xml) 
+
+showContestFromText = (text) ->
+    $x = $ $.parseXML text
+    showContestFromXml $x
+
+showContestFromXml = (xml) ->
+        $('#menu').hide()
+        $('#contest').fadeIn()
         contest = new Contest
-        
-        contest.parse event.target.result
-
-        console.log contest
-
+        contest.parse xml
         contest.calculateScores()
-       
         contest.showContest() 
         contest.showPilots() 
         contest.showTasks()
@@ -354,8 +367,6 @@ handleFileSelect = (event) ->
         contest.showStartlist()
         contest.showDetailScore()
         contest.showScore()
-        
-    reader.readAsText file
 
 $(document).ready ->
     $('#f3kscoreurlselect').hide()
@@ -370,6 +381,6 @@ $(document).ready ->
     $('#contest').hide()
     $('#_f3kscorefile').on 'change', (event) =>
         $('#f3kscorefile').val $(event.currentTarget).val().replace 'C:\\fakepath\\', ''
-        $('#menu').hide()
-        $('#contest').fadeIn()
         handleFileSelect event
+    $('#btnExamine').click (event) ->
+        handleUrlSelect $('#f3kscoreurl').data 'value'
