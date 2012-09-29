@@ -63,6 +63,15 @@ class window.ScoreView extends Backbone.View
         rounds = ( @collection.at 0 ).get( 'totalScores' ).length
         $(@el).html Mustache.render @template, { pilots: @collection.toJSON(), rounds: [1..rounds] }
 
+class window.ContestView extends Backbone.View
+
+    initialize: ->
+        @template = $('#name-template').text()
+        @el = '#score'
+
+    render: ->    
+        $(@el).html Mustache.render @template, @model.toJSON()
+
 class window.Contest extends Backbone.Model
 
     showPilots: ->
@@ -94,6 +103,11 @@ class window.Contest extends Backbone.Model
         scoreView = new ScoreView
             collection: @get 'scorePilots'
         scoreView.render()    
+
+    showContest: ->
+        contestView = new ContestView
+            model: @
+        contestView.render()
 
     calculateScores: ->
         @get( 'rounds' ).each (round) =>
@@ -332,7 +346,8 @@ handleFileSelect = (event) ->
         console.log contest
 
         contest.calculateScores()
-        
+       
+        contest.showContest() 
         contest.showPilots() 
         contest.showTasks()
         contest.showFlightGroupMatrix()
