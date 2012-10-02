@@ -14470,6 +14470,27 @@ Backbone.Model.prototype.toJSON = function() {
 
   })(Backbone.View);
 
+  window.ContestView = (function(_super) {
+
+    __extends(ContestView, _super);
+
+    function ContestView() {
+      return ContestView.__super__.constructor.apply(this, arguments);
+    }
+
+    ContestView.prototype.initialize = function() {
+      this.template = $('#name-template').text();
+      return this.el = '#name';
+    };
+
+    ContestView.prototype.render = function() {
+      return $(this.el).html(Mustache.render(this.template, this.model.toJSON()));
+    };
+
+    return ContestView;
+
+  })(Backbone.View);
+
   window.Contest = (function(_super) {
 
     __extends(Contest, _super);
@@ -14519,11 +14540,23 @@ Backbone.Model.prototype.toJSON = function() {
     };
 
     Contest.prototype.showScore = function() {
-      var scoreView;
+      var scoreView,
+        _this = this;
       scoreView = new ScoreView({
         collection: this.get('scorePilots')
       });
-      return scoreView.render();
+      scoreView.render();
+      return $('#btnExport').off().on('click', function() {
+        return _this.get('scorePilots').exportCSV();
+      });
+    };
+
+    Contest.prototype.showContest = function() {
+      var contestView;
+      contestView = new ContestView({
+        model: this
+      });
+      return contestView.render();
     };
 
     Contest.prototype.calculateScores = function() {
@@ -14640,6 +14673,7 @@ Backbone.Model.prototype.toJSON = function() {
     };
 
     Contest.prototype.parse = function($x) {
+      this._parseContest($x);
       this._parseTasks($x);
       this._parsePilots($x);
       this._filterRoundsWithAllZeroScores();
@@ -14648,6 +14682,10 @@ Backbone.Model.prototype.toJSON = function() {
 
     Contest.prototype._value = function(element, field) {
       return $(element).find(field).first().text();
+    };
+
+    Contest.prototype._parseContest = function($x) {
+      return this.set('name', $x.find('competitionName').first().text());
     };
 
     Contest.prototype._parsePilots = function($x) {
@@ -14784,6 +14822,30 @@ Backbone.Model.prototype.toJSON = function() {
     }
 
     PilotCollection.prototype.model = Pilot;
+
+    PilotCollection.prototype.exportCSV = function() {
+      var array, blob, csv, line, url,
+        _this = this;
+      array = [['Rank', 'Name', 'Score']];
+      this.each(function(pilot) {
+        return array.push([pilot.get('rank'), "" + (pilot.get('firstName')) + " " + (pilot.get('lastName')), pilot.get('totalPercent')]);
+      });
+      csv = ((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = array.length; _i < _len; _i++) {
+          line = array[_i];
+          _results.push(line.join(","));
+        }
+        return _results;
+      })()).join('\r\n');
+      blob = new Blob([csv], {
+        type: 'text/csv'
+      });
+      url = window.webkitURL.createObjectURL(blob);
+      $('#btnExport').attr('download', 'export.csv');
+      return $('#btnExport').attr('href', url);
+    };
 
     return PilotCollection;
 
@@ -15026,7 +15088,7 @@ Backbone.Model.prototype.toJSON = function() {
     contest = new Contest;
     contest.parse(xml);
     contest.calculateScores();
-    console.log(contest);
+    contest.showContest();
     contest.showPilots();
     contest.showTasks();
     contest.showFlightGroupMatrix();
