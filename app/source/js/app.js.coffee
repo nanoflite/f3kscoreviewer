@@ -103,6 +103,8 @@ class window.Contest extends Backbone.Model
         scoreView = new ScoreView
             collection: @get 'scorePilots'
         scoreView.render()    
+        $('#btnExport').off().on 'click', =>
+            @get( 'scorePilots' ).exportCSV()
 
     showContest: ->
         contestView = new ContestView
@@ -275,6 +277,16 @@ class window.PilotCollection extends Backbone.Collection
 
 #    comparator: (model) ->
 #        "#{model.get 'lastName'} #{model.get 'firstName'}"
+
+    exportCSV: ->
+        array = [ [ 'Rank', 'Name', 'Score' ] ]
+        @.each (pilot) =>
+            array.push [ pilot.get( 'rank' ), "#{pilot.get( 'firstName' )} #{pilot.get( 'lastName' )}", pilot.get( 'totalPercent' ) ]
+        csv = ( line.join(",") for line in array ).join( '\r\n' )
+        blob = new Blob [ csv ], { type: 'text/csv' }
+        url = window.webkitURL.createObjectURL( blob )
+        $('#btnExport').attr 'download', 'export.csv'
+        $('#btnExport').attr 'href', url
 
 class window.Task extends Backbone.Model
 
