@@ -14783,15 +14783,17 @@ Backbone.Model.prototype.toJSON = function() {
       tasks = new TaskCollection;
       id = 0;
       $x.find("competitorList f3kscore\\.Competitor").first().find("lastCalculatedTask").each(function(index, element) {
-        var parts, task;
-        parts = (_this._value(element, 'name')).split(/-/);
+        var parts, task, value;
+        value = _this._value(element, 'name');
+        parts = value.split(/-/);
         task = new Task({
           id: id++,
           letter: parts[0].replace(/"/g, ''),
-          name: parts[1],
+          name: parts[1] || "",
           description: _this._value(element, 'longName'),
           windowTime: _this._value(element, 'windowTime')
         });
+        console.log(task);
         return tasks.add(task);
       });
       return this.set('tasks', tasks);
@@ -15087,6 +15089,8 @@ Backbone.Model.prototype.toJSON = function() {
     $('#contest').fadeIn();
     contest = new Contest;
     contest.parse(xml);
+    console.log("---");
+    console.log(contest.toJSON());
     contest.calculateScores();
     contest.showContest();
     contest.showPilots();
