@@ -259,13 +259,15 @@ class window.Contest extends Backbone.Model
         tasks = new TaskCollection
         id = 0
         $x.find("competitorList f3kscore\\.Competitor").first().find("lastCalculatedTask").each (index, element) =>
-            parts = ( @_value element, 'name' ).split /-/
+            value = @_value element, 'name'
+            parts = value.split /-/
             task = new Task
                 id: id++
                 letter: parts[0].replace /"/g, ''
-                name: parts[1]
+                name: parts[1] or ""
                 description: @_value element, 'longName'
                 windowTime: @_value element, 'windowTime'
+            console.log task
             tasks.add task
         @set 'tasks', tasks
 
@@ -371,6 +373,8 @@ showContestFromXml = (xml) ->
         $('#contest').fadeIn()
         contest = new Contest
         contest.parse xml
+        console.log "---"
+        console.log contest.toJSON()
         contest.calculateScores()
         contest.showContest() 
         contest.showPilots() 

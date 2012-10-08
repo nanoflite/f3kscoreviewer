@@ -4,3 +4,5 @@ f3kscore/F3KScore_v8.9.zip
 *.class
 app/build
 app/.site
+app/source/.idea/
+*.swp
