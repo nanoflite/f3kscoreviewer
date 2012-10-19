@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>F3KScore Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Shows F3K scores online.">
+    <meta name="author" content="Johan Van den Brande <johan@vandenbrande.com>">
+    <link rel="stylesheet" type="text/css" href="css/site.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="css/print.css" media="print" />
+    <script type="text/javascript" src="js/app.js"></script>
+    <style>
+      body {
+        padding-top: 60px;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">F3K Score Viewer</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active" id="menuHome"><a href="index.html">Home</a></li>
+              <li id="menuAbout"><a href="about.html">About</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <script id="about-template" type="text/html">
+# About F3K Score Viewer
+
+F3K Score Viewer let's you view [f3kscore](http://olgol.com/F3KScore/) files in your browser.
+
+## Patching f3kscore to output xml files.
+
+The save files of f3kscore are a serialisation of java objects, problem is that this binary format is difficult to read from JavaScript. 
+
+Therefore I created a patch that allows f3kscore to output the save files as XML files. I use the 'xstream' [serializer from codehaus](http://xstream.codehaus.org/) for this.
+
+To apply the patch, you need to run the 'build.sh' script in the f3kscore folder. This script downloads version 8.9 and creates a new zip with the patched version. You use the patched version on the command line like so:
+
+    $> java -jar f3kscore_v8.9.jar <infile>.f3k
+
+This will generate a '<infile>.f3k.xml' output file in the same folder as the original. You will see the UI popping up for a few seconds, but no user interaction is necessary.
+
+## Using F3K Score Viewer online
+
+Upload the newly generated XML file to the online application. It will parse and show the contest. There are also some predefined XML files from the Belgian contests in 2012.
+
+## How does the application work?
+
+The application is written in CoffeeScript and is a SPA using Backbone.js and some new HTML5 features, like the filesystem API, data urls (for csv exports). For templating I use the Mustache.js implementation. Everything runs on the client side.
+
+## Why did you write this?
+
+I was tired of writing a report after an F3K contest to share the results with others. I believe this to be a more approachable way to share contest results. Off course, you still need a fairly recent web browser and I only tested it in Chrome.
+
+## The code
+
+You can find the code on GitHub:
+
+[nanoflite / f3kscoreviewer](https://github.com/nanoflite/f3kscoreviewer)
+
+## Author
+
+Johan Van den Brande
+
+Thanks go to Oleg Golovidov for the excellent F3K score. 
+</script>
+
+<div id="about"></div>
+
+    </div>
+
+  </body>
+</html>
