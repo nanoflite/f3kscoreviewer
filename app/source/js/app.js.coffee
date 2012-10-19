@@ -4,6 +4,9 @@
 #= require 'mustache'
 #= require 'bootstrap'
 #= require 'backbone-patch-recursive-json'
+#= require 'showdown'
+
+@app = null
 
 class window.PilotsView extends Backbone.View
 
@@ -350,31 +353,68 @@ class window.FlightGroupCollection extends Backbone.Collection
 class window.Score extends Backbone.Model
 
 class window.ScoreCollection extends Backbone.Collection
+  
+class window.App extends Backbone.Router
 
-handleFileSelect = (event) ->
-    file = event.target.files[0]
+    routes:
+        'about.html':  'about'
+        'index.html':  'home'
+        '':            'home'
 
-    reader = new FileReader
-    reader.onload = (event) =>
-        showContestFromText event.target.result
-    reader.readAsText file
+    home: ->
+        $('#f3kscoreurlselect').hide()
+        $('#contest').hide()
+        
+        $('#f3kscoreurl').focus (event) =>
+            $('#f3kscoreurlselect').show().css('position', 'relative').css('left', $('#f3kscoreurltitle').width() + 10)
 
-handleUrlSelect = (url) ->
-    return if not url
-    $.get url, (xml) ->
-        showContestFromXml jQuery(xml) 
+        $('#f3kscoreurl').keypress (event) =>
+            event.preventDefault()
 
-showContestFromText = (text) ->
-    $x = $ $.parseXML text
-    showContestFromXml $x
+        $('#f3kscoreurlselect').find('a').click (event) =>
+            $('#f3kscoreurl').val $(event.currentTarget).text()
+            $('#f3kscoreurl').data('value', $(event.currentTarget).data('value'))
+            $('#f3kscoreurlselect').fadeOut()
 
-showContestFromXml = (xml) ->
+        $('#_f3kscorefile').on 'change', (event) =>
+            $('#f3kscorefile').val $(event.currentTarget).val().replace 'C:\\fakepath\\', ''
+            @_handleFileSelect event
+
+        $('#btnExamine').click (event) =>
+            @_handleUrlSelect $('#f3kscoreurl').data 'value'
+
+        $('#menuHome').addClass 'active'
+        $('#menuAbout').removeClass 'active'
+
+    about: ->
+        $('#menuHome').removeClass 'active'
+        $('#menuAbout').addClass 'active'
+        aboutTemplate = $('#about-template').text() 
+        converter = new Showdown.converter()
+        $('#about').html converter.makeHtml aboutTemplate
+ 
+    _handleFileSelect: (event) ->
+        file = event.target.files[0]
+
+        reader = new FileReader
+        reader.onload = (event) =>
+            @_showContestFromText event.target.result
+        reader.readAsText file
+
+    _handleUrlSelect: (url) ->
+        return if not url
+        $.get url, (xml) =>
+            @_showContestFromXml jQuery(xml) 
+
+    _showContestFromText: (text) ->
+        $x = $ $.parseXML text
+        @_showContestFromXml $x
+
+    _showContestFromXml: (xml) ->
         $('#menu').hide()
         $('#contest').fadeIn()
         contest = new Contest
         contest.parse xml
-        console.log "---"
-        console.log contest.toJSON()
         contest.calculateScores()
         contest.showContest() 
         contest.showPilots() 
@@ -383,20 +423,11 @@ showContestFromXml = (xml) ->
         contest.showStartlist()
         contest.showDetailScore()
         contest.showScore()
-
+        $('#btnPrint').click (event) =>
+            window.print()  
+        $('#btnHome').click (event) =>
+            location.reload()
+         
 $(document).ready ->
-    $('#f3kscoreurlselect').hide()
-    $('#f3kscoreurl').focus (event) ->
-        $('#f3kscoreurlselect').show().css('position', 'relative').css('left', $('#f3kscoreurltitle').width() + 10)
-    $('#f3kscoreurl').keypress (event) ->
-        event.preventDefault()
-    $('#f3kscoreurlselect').find('a').click (event) ->
-        $('#f3kscoreurl').val $(event.currentTarget).text()
-        $('#f3kscoreurl').data('value', $(event.currentTarget).data('value'))
-        $('#f3kscoreurlselect').fadeOut()
-    $('#contest').hide()
-    $('#_f3kscorefile').on 'change', (event) =>
-        $('#f3kscorefile').val $(event.currentTarget).val().replace 'C:\\fakepath\\', ''
-        handleFileSelect event
-    $('#btnExamine').click (event) ->
-        handleUrlSelect $('#f3kscoreurl').data 'value'
+    @app = new App() 
+    Backbone.history.start({pushState: true})
