@@ -16407,6 +16407,9 @@ if (typeof module !== 'undefined') module.exports = Showdown;
     }
 
     App.prototype.routes = {
+      'f3kscoreviewer/about.html': 'about',
+      'f3kscoreviewer/index.html': 'home',
+      'f3kscoreviewer/': 'home',
       'about.html': 'about',
       'index.html': 'home',
       '': 'home'
