@@ -356,6 +356,9 @@ class window.ScoreCollection extends Backbone.Collection
 class window.App extends Backbone.Router
 
     routes:
+        'f3kscoreviewer/about.html':  'about'
+        'f3kscoreviewer/index.html':  'home'
+        'f3kscoreviewer/':            'home'
         'about.html':  'about'
         'index.html':  'home'
         '':            'home'
