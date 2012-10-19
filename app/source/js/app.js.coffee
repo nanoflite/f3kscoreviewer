@@ -270,7 +270,6 @@ class window.Contest extends Backbone.Model
                 name: parts[1] or ""
                 description: @_value element, 'longName'
                 windowTime: @_value element, 'windowTime'
-            console.log task
             tasks.add task
         @set 'tasks', tasks
 
