@@ -1,14 +1,14 @@
 @import url(bootstrap.css);
 @import url(bootstrap-responsive.css);
-/* line 5, site.css.scss */
+/* line 5, /Users/johan/Projects/f3kscoreviewer/app/source/css/site.css.scss */
 .scrap_true {
   text-decoration: line-through; }
 
-/* line 9, site.css.scss */
+/* line 9, /Users/johan/Projects/f3kscoreviewer/app/source/css/site.css.scss */
 .number {
   text-align: right; }
 
-/* line 13, site.css.scss */
+/* line 13, /Users/johan/Projects/f3kscoreviewer/app/source/css/site.css.scss */
 .hero-unit {
   padding: 60px;
   margin-bottom: 30px;
